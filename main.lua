@@ -2,11 +2,12 @@ function love.load()
     inventory={}
     require("draw")
     require("map")
+    require("ai")
     local seed_val = love.timer.getTime()
     love.math.setRandomSeed(seed_val)
     love.math.random()
     size=16--size of each "tile"
-    level_size=480
+    level_size=240
     new_level()
     attack=1
     t=0--timer
@@ -25,7 +26,8 @@ function add_enemy(xx,yy,typ,h)
 end
 
 function add_message(text)
-    local t={tx=text,life=5,x=520,y=450}
+    thyme()
+    local t={tx=text,life=5,x=80,y=280}
     table.insert(msg_list,t)
 end
 
@@ -107,17 +109,21 @@ function new_level()
 		wallsy=wallsy+16
 	end
   end
-    maze_generation()
+    --maze_generation()
     --random wall
     --between 32 and 464
     --addwall(160,128)
-    
+    addwall(128,96)
+    addwall(128,112)
+    addwall(144,80)
+    addwall(160,80)
+    addwall(176,80)
     --
-    add_inventory(#inventory+1,"Nuke",250+(#inventory*15))
-    add_inventory(#inventory+1,"Blessing",250+(#inventory*15))
+    add_inventory(#inventory+1,"Nuke",75+(#inventory*15))
+    add_inventory(#inventory+1,"Blessing",75+(#inventory*15))
     --add enemy
-    add_enemy(320,160,0,8)
-    add_enemy(320,48,0,12)
+    add_enemy(176,48,0,2)
+    add_enemy(160,48,0,1)
     --stairs
     add_item(160,144,"stairs")
     --
@@ -126,48 +132,11 @@ end
 
 function move()
     --move enemy/combat
-    for i=1,#enemy_list do
-            if dist(x,y,enemy_list[i].x,enemy_list[i].y)>16 then
-                local bx,by=0,0
-                if x<enemy_list[i].x then
-                    bx=bx-size
-                elseif x>enemy_list[i].x then
-                    bx=bx+size
-                elseif x==enemy_list[i].x then
-                    bx=bx+0
-                end
-                if y<enemy_list[i].y then
-                    by=by-size
-                elseif y>enemy_list[i].y then
-                    by=by+size
-                else
-                    by=by+0
-                end
-                for h=1,#wall_list do--don't want through walls
-                    if enemy_list[i].x+bx==wall_list[h].x and enemy_list[i].y+by==wall_list[h].y then
-                        bx=0
-                        by=0
-                    end
-                end
-                for oe=1,#enemy_list do--don't step on other enemies
-                    if enemy_list[i].x+bx==enemy_list[oe].x and enemy_list[i].y+by==enemy_list[oe].y then
-                        bx=0
-                        by=0
-                    end
-                end
-                if not(enemy_list[i].x+bx==x and enemy_list[i].y+by==y) then
-                    enemy_list[i].y=enemy_list[i].y+by--moving
-                    enemy_list[i].x=enemy_list[i].x+bx--moving
-                end
-            else
-                hp=hp-1
-                add_message("You are hit")
-            end
-    end
+    ai_move()
 end
 
 function thyme()--time happens
-    t=t+1
+    --t=t+1
     --
     local i=1
     while #msg_list>=i do
@@ -182,7 +151,8 @@ end
 
 function love.keypressed(key)
     if key=="up" or key=="w" or key=="kp8" then
-        thyme()
+        --thyme()
+        add_message("You walk")
         local neither=true
     	for i=1,#wall_list do
     		if y-size==wall_list[i].y and x==wall_list[i].x then
@@ -199,7 +169,8 @@ function love.keypressed(key)
             y=y-size
         end
     elseif key=="down" or key=="s" or key=="kp2"  then
-        thyme()
+        --thyme()
+        add_message("You walk")
         local neither=true
     	for i=1,#wall_list do
     		if y+size==wall_list[i].y and x==wall_list[i].x then
@@ -216,7 +187,8 @@ function love.keypressed(key)
             y=y+size
         end
     elseif key=="left" or key=="a" or key=="kp4"  then
-        thyme()
+        --thyme()
+        add_message("You walk")
         local neither=true
     	for i=1,#wall_list do
     		if y==wall_list[i].y and x-size==wall_list[i].x then
@@ -233,7 +205,8 @@ function love.keypressed(key)
             x=x-size
         end
     elseif key=="right" or key=="d" or key=="kp6"  then
-        thyme()
+        --thyme()
+        add_message("You walk")
         neither=true
     	for i=1,#wall_list do
     		if y==wall_list[i].y and x+size==wall_list[i].x then
@@ -259,7 +232,11 @@ function love.keypressed(key)
                end
             end
         end
+    
+    elseif key=="r" then
+        love.load() 
     end
+
     --collission with items
     for i=1,#item_list do
         if item_list[i].x==x and item_list[i].y==y then
